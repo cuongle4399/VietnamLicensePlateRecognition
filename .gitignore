@@ -12,3 +12,14 @@ __pycache__/
 # IDEs
 .vscode/
 .idea/
+
+# Virtual Environment
+venv/
+.venv/
+Env/
+env/
+
+# Deep Learning weights & outputs
+runs/
+weights/*.pt
+weights/*.onnx

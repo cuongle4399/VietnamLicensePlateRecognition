@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnam License Plate Recognition Dashboard</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">🚗</span>
+                <div class="title-sub">
+                    <h1>VIETNAM LICENSE PLATE OCR</h1>
+                    <span class="subtext">AI-Powered Detection & Recognition Dashboard</span>
+                </div>
+            </div>
+            <div class="network-badge">
+                <span class="pulse-dot"></span>
+                <span id="network-status">Local Server Active</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- LEFT PANEL: INPUT & CONTROLS -->
+            <section class="panel input-panel">
+                <div class="card-header">
+                    <h2>1. Input Image Selection</h2>
+                </div>
+                
+                <!-- Upload Dropzone -->
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-content">
+                        <span class="upload-icon">📤</span>
+                        <p class="drop-text-desktop">Drag & drop image here or click to select</p>
+                        <p class="drop-text-mobile">Tap to choose image</p>
+                        <span class="file-limits">Supports JPG, PNG, WEBP</span>
+                    </div>
+                    <!-- Hidden file inputs -->
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btn-browse">📁 Browse Files</button>
+                    <button class="btn btn-primary" id="btn-camera">📸 Take Photo</button>
+                </div>
+
+                <!-- Input Preview Frame -->
+                <div class="preview-box hidden" id="input-preview-box">
+                    <h3>Uploaded Image Preview</h3>
+                    <div class="image-wrapper">
+                        <img id="input-preview" src="" alt="Input preview">
+                    </div>
+                </div>
+
+                <!-- Detection Settings -->
+                <div class="settings-card">
+                    <div class="slider-header">
+                        <label for="conf-slider">YOLO Detection Confidence Threshold</label>
+                        <span id="conf-val">0.25</span>
+                    </div>
+                    <input type="range" id="conf-slider" min="10" max="90" value="25" step="5" class="slider">
+                </div>
+
+                <!-- Run Button -->
+                <button class="btn btn-success btn-block" id="btn-run" disabled>⚡ Run Recognition</button>
+            </section>
+
+            <!-- RIGHT PANEL: DETECTED OUTPUTS & OCR -->
+            <section class="panel output-panel">
+                <div class="card-header">
+                    <h2>2. AI Recognition Output</h2>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state">
+                    <div class="spinner hidden" id="spinner"></div>
+                    <span class="empty-icon" id="empty-icon">🤖</span>
+                    <p id="status-text">Upload an image and run recognition to see AI results.</p>
+                </div>
+
+                <!-- Results Panel (Initially Hidden) -->
+                <div class="results-content hidden" id="results-content">
+                    
+                    <!-- Annotated Image Display -->
+                    <div class="result-box">
+                        <h3>Detection Result (YOLOv8)</h3>
+                        <div class="image-wrapper">
+                            <img id="annotated-image" src="" alt="Annotated Output">
+                        </div>
+                    </div>
+
+                    <!-- OCR & Plates Info -->
+                    <div class="plate-results-wrapper">
+                        
+                        <!-- Multi-Plate Selector -->
+                        <div class="plate-selector-row hidden" id="selector-row">
+                            <label for="plate-select">Detected Plates:</label>
+                            <select id="plate-select" class="select-dropdown"></select>
+                        </div>
+
+                        <!-- Main Plate Detail Card -->
+                        <div class="plate-detail-card">
+                            
+                            <!-- Crop Preview and Physical Style Plate -->
+                            <div class="plate-visual-row">
+                                <div class="crop-preview-box">
+                                    <span>Cropped Plate:</span>
+                                    <div class="crop-img-frame">
+                                        <img id="crop-image" src="" alt="Crop Preview">
+                                    </div>
+                                </div>
+                                
+                                <div class="physical-plate-box">
+                                    <span>Formatted Output:</span>
+                                    <!-- Stylized Physical VN Plate -->
+                                    <div class="vn-plate" id="vn-plate-display">
+                                        <div class="plate-border">
+                                            <span class="plate-text" id="plate-text-display">N/A</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Performance Stats -->
+                            <div class="stats-row">
+                                <div class="stat-card">
+                                    <span class="stat-label">Inference Time</span>
+                                    <span class="stat-value" id="val-time">-</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-label">OCR Confidence</span>
+                                    <span class="stat-value" id="val-conf">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
