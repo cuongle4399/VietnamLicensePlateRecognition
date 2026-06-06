@@ -21,5 +21,3 @@ env/
 
 # Deep Learning weights & outputs
 runs/
-weights/*.pt
-weights/*.onnx
