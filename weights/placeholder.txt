@@ -1,0 +1,1 @@
+This directory contains deep learning model weights. Place your custom 'best.pt' weights here.

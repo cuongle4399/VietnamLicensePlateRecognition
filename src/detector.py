@@ -1,21 +1,35 @@
 import os
+import sys
 import cv2
 from ultralytics import YOLO
+
+def get_resource_path(relative_path):
+    """
+    Resolves resource paths dynamically for PyInstaller.
+    """
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class LicensePlateDetector:
     def __init__(self, model_path="weights/best.pt"):
         """
         Initializes the YOLOv8 License Plate Detector.
-        If weights/best.pt is not found, falls back to yolov8n.pt (pretrained on COCO).
+        If weights/best.pt is not found, falls back to yolov8n.pt.
         """
-        self.model_path = model_path
-        if not os.path.exists(model_path):
-            print(f"[WARNING] Model weights not found at '{model_path}'.")
-            print("Please train your model and place 'best.pt' in the 'weights/' folder.")
-            print("Falling back to default 'yolov8n.pt' for testing...")
-            self.model = YOLO("yolov8n.pt")
+        # Resolve the weights path dynamically for PyInstaller support
+        resolved_path = get_resource_path(model_path)
+        self.model_path = resolved_path
+        
+        if not os.path.exists(resolved_path):
+            print(f"[WARNING] Model weights not found at '{resolved_path}'.")
+            fallback_path = get_resource_path("yolov8n.pt")
+            print(f"Falling back to default '{fallback_path}'...")
+            self.model = YOLO(fallback_path)
         else:
-            self.model = YOLO(model_path)
+            self.model = YOLO(resolved_path)
 
     def detect(self, image_input, conf_threshold=0.25):
         """

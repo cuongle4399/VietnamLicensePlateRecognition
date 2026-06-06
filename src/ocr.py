@@ -13,8 +13,15 @@ class LicensePlateOCR:
         """
         # Initialize PaddleOCR
         # lang='en' is fast and extremely accurate for alphanumeric characters.
-        # show_log=False keeps the console clean.
-        self.ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+        # We disable oneDNN/MKLDNN on CPU because it has a known bug in recent versions
+        # that raises "NotImplementedError: ConvertPirAttribute2RuntimeAttribute not support".
+        try:
+            self.ocr = PaddleOCR(lang='en', use_textline_orientation=True, enable_mkldnn=False)
+        except Exception:
+            try:
+                self.ocr = PaddleOCR(lang='en', use_angle_cls=True, enable_mkldnn=False)
+            except Exception:
+                self.ocr = PaddleOCR(lang='en')
 
     def format_plate_text(self, text):
         """
@@ -96,39 +103,68 @@ class LicensePlateOCR:
             return "", 0.0
 
         # Run OCR
-        # cls=True checks text direction/orientation
-        results = self.ocr.ocr(crop_image, cls=True)
+        # We initialized use_textline_orientation/use_angle_cls at init, so we do not pass 'cls' here.
+        # This avoids TypeError: PaddleOCR.predict() got an unexpected keyword argument 'cls'.
+        try:
+            results = self.ocr.ocr(crop_image)
+        except TypeError:
+            # Fallback for older PaddleOCR versions that require cls parameter
+            results = self.ocr.ocr(crop_image, cls=True)
         
         if not results or results[0] is None:
             return "", 0.0
 
-        # results[0] is a list of [ [box], (text, confidence) ]
-        detections = results[0]
-        
-        if len(detections) == 0:
-            return "", 0.0
-
-        # Prepare elements with box and text info
         items = []
-        for det in detections:
-            box = det[0]
-            text = det[1][0]
-            conf = det[1][1]
+        
+        # Support both new PaddleOCR v3.6+ dictionary format and older list format
+        if isinstance(results[0], dict):
+            res_dict = results[0]
+            rec_texts = res_dict.get('rec_texts', [])
+            rec_scores = res_dict.get('rec_scores', [])
+            rec_polys = res_dict.get('rec_polys', [])
             
-            # Calculate center coords
-            xs = [pt[0] for pt in box]
-            ys = [pt[1] for pt in box]
-            cx = sum(xs) / 4
-            cy = sum(ys) / 4
-            height = max(ys) - min(ys)
-            
-            items.append({
-                "cx": cx,
-                "cy": cy,
-                "height": height,
-                "text": text,
-                "confidence": conf
-            })
+            for i in range(len(rec_texts)):
+                text = rec_texts[i]
+                conf = rec_scores[i]
+                box = rec_polys[i] if i < len(rec_polys) else None
+                if box is None or len(box) == 0:
+                    continue
+                
+                # Calculate center coords
+                xs = [pt[0] for pt in box]
+                ys = [pt[1] for pt in box]
+                cx = sum(xs) / len(xs)
+                cy = sum(ys) / len(ys)
+                height = max(ys) - min(ys)
+                
+                items.append({
+                    "cx": cx,
+                    "cy": cy,
+                    "height": height,
+                    "text": text,
+                    "confidence": conf
+                })
+        else:
+            detections = results[0]
+            for det in detections:
+                box = det[0]
+                text = det[1][0]
+                conf = det[1][1]
+                
+                # Calculate center coords
+                xs = [pt[0] for pt in box]
+                ys = [pt[1] for pt in box]
+                cx = sum(xs) / len(xs)
+                cy = sum(ys) / len(ys)
+                height = max(ys) - min(ys)
+                
+                items.append({
+                    "cx": cx,
+                    "cy": cy,
+                    "height": height,
+                    "text": text,
+                    "confidence": conf
+                })
 
         # Group text items into rows (for 2-line plates)
         # Sort items by Y-coordinate first

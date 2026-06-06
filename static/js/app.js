@@ -38,12 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
         confVal.textContent = val;
     });
 
-    // --- File Input Actions ---
-    btnBrowse.addEventListener("click", () => fileInput.click());
-    
-    // Trigger mobile native camera capture
-    btnCamera.addEventListener("click", () => cameraInput.click());
-
+    // --- File Input Actions (Handled automatically by file inputs overlays, no JS click trigger needed) ---
     fileInput.addEventListener("change", (e) => handleFileSelection(e.target.files[0]));
     cameraInput.addEventListener("change", (e) => handleFileSelection(e.target.files[0]));
 
@@ -67,6 +62,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // --- Clipboard Paste Event (Ctrl + V) ---
+    document.addEventListener("paste", (e) => {
+        const items = (e.clipboardData || window.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const file = items[i].getAsFile();
+                handleFileSelection(file);
+                break;
+            }
+        }
+    });
+
     function handleFileSelection(file) {
         if (!file) return;
 
@@ -83,6 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.onload = (e) => {
             inputPreview.src = e.target.result;
             inputPreviewBox.classList.remove("hidden");
+            const dropPrompt = document.getElementById("drop-zone-prompt");
+            if (dropPrompt) dropPrompt.classList.add("hidden");
             btnRun.disabled = false;
         };
         reader.readAsDataURL(file);
@@ -106,8 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Show loading state
         btnRun.disabled = true;
-        btnBrowse.disabled = true;
-        btnCamera.disabled = true;
+        btnBrowse.classList.add("disabled");
+        btnCamera.classList.add("disabled");
+        fileInput.disabled = true;
+        cameraInput.disabled = true;
         
         emptyIcon.classList.add("hidden");
         spinner.classList.remove("hidden");
@@ -141,8 +152,10 @@ document.addEventListener("DOMContentLoaded", () => {
             showErrorState(error.message);
         } finally {
             btnRun.disabled = false;
-            btnBrowse.disabled = false;
-            btnCamera.disabled = false;
+            btnBrowse.classList.remove("disabled");
+            btnCamera.classList.remove("disabled");
+            fileInput.disabled = false;
+            cameraInput.disabled = false;
         }
     });
 
@@ -176,6 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
             plateTextDisplay.textContent = "NONE";
             valConf.textContent = "0%";
             document.getElementById("vn-plate-display").style.backgroundColor = "#ffebee"; // red alert tint
+            document.getElementById("char-list-display").innerHTML = "";
         } else {
             document.getElementById("vn-plate-display").style.backgroundColor = "#f8fafc";
             
@@ -216,5 +230,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         valConf.textContent = plate.confidence + "%";
+
+        // Render detailed character breakdown
+        const charListDisplay = document.getElementById("char-list-display");
+        charListDisplay.innerHTML = "";
+        
+        if (plate.characters && plate.characters.length > 0) {
+            plate.characters.forEach(c => {
+                const item = document.createElement("div");
+                item.className = "char-item";
+                
+                let confClass = "medium";
+                if (c.confidence >= 90) {
+                    confClass = "high";
+                }
+                
+                item.innerHTML = `
+                    <span class="char-val">${c.char}</span>
+                    <span class="char-type">${c.type}</span>
+                    <span class="char-conf ${confClass}">${c.confidence}%</span>
+                `;
+                charListDisplay.appendChild(item);
+            });
+        } else {
+            charListDisplay.innerHTML = `<span style="color: var(--text-muted); font-size: 13px;">Không có dữ liệu phân đoạn ký tự.</span>`;
+        }
     }
 });

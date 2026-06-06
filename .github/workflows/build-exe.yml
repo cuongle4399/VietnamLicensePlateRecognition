@@ -14,7 +14,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -26,7 +26,7 @@ jobs:
 
     - name: Build App with PyInstaller
       run: |
-        pyinstaller --noconfirm --clean --name "VN_License_Plate_OCR" --add-data "templates;templates" --add-data "static;static" main.py
+        pyinstaller --noconfirm --clean --name "VN_License_Plate_OCR" --add-data "templates;templates" --add-data "static;static" --add-data "weights;weights" --add-data "yolov8n.pt;." --collect-all ultralytics --collect-all paddleocr --collect-all paddlex --collect-all paddle main.py
 
     - name: Compress Build Folder to Zip
       run: |
