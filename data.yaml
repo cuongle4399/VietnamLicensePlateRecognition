@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 2
+names: ['0', '1']
+
+roboflow:
+  workspace: nguyn-khang-0apuu
+  project: vietnam-license-plate-hjswj-xcnw3
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/nguyn-khang-0apuu/vietnam-license-plate-hjswj-xcnw3/dataset/2
