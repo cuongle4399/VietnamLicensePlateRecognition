@@ -61,7 +61,7 @@ jobs:
         tag_name: ${{ steps.tag.outputs.tag }}
         name: "VN License Plate OCR — ${{ steps.tag.outputs.tag }}"
         body: |
-          ## 🚀 Phiên bản ${{ steps.tag.outputs.tag }}
+          ## Phiên bản ${{ steps.tag.outputs.tag }}
 
           Tải xuống và giải nén file ZIP bên dưới. Chạy file `VN_License_Plate_OCR.exe` để khởi động ứng dụng.
 
