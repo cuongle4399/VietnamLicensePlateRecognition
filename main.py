@@ -12,7 +12,23 @@ from flask import Flask, render_template, request, jsonify
 from src.detector import LicensePlateDetector
 from src.ocr import LicensePlateOCR
 
-app = Flask(__name__)
+def get_resource_path(relative_path):
+    """
+    Resolves resource paths dynamically.
+    Works for development and PyInstaller standalone build mode (_MEIPASS).
+    """
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+# Initialize Flask with PyInstaller compatible paths
+app = Flask(
+    __name__,
+    template_folder=get_resource_path("templates"),
+    static_folder=get_resource_path("static")
+)
 
 # Lock for thread safety in deep learning inference
 inference_lock = threading.Lock()

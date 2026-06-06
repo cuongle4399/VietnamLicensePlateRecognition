@@ -1,0 +1,39 @@
+name: Build Standalone Windows Application
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build App with PyInstaller
+      run: |
+        pyinstaller --noconfirm --clean --name "VN_License_Plate_OCR" --add-data "templates;templates" --add-data "static;static" main.py
+
+    - name: Compress Build Folder to Zip
+      run: |
+        powershell Compress-Archive -Path dist/VN_License_Plate_OCR -DestinationPath dist/VN_License_Plate_OCR.zip -Force
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: VN_License_Plate_OCR_Windows_Portable
+        path: dist/VN_License_Plate_OCR.zip
